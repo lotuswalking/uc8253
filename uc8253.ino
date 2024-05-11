@@ -54,14 +54,16 @@ void setup() {
   /************Normal picture display*******************/
   EPD_init();           //EPD init
   PIC_display_Clean();  //EPD Clear
+  // PIC_display_Clean_Bar();
   // PIC_display_Clean_white();
-  PIC_display(gImage_BW1,gImage_R1);//EPD_picture1
-  delay(8000);  //3s
-  // PIC_display(epd_bitmap_td_bw);  //黑白图片显示
-  PIC_display_My(epd_bitmap_td_bw, epd_bitmap_td_rw);  //彩色显示
-  // PIC_display(gImage_tandan,gImage_tandan);
-  delay(500);   //3s
-  EPD_sleep();  //EPD_sleep,Sleep instruction is necessary, please do not delete!!!
+  // return;
+  // PIC_display(gImage_BW1,gImage_R1);//EPD_picture1
+  // delay(8000);  //3s
+  // // PIC_display(epd_bitmap_td_bw);  //黑白图片显示
+  PIC_display_My(epd_bitmap_td_bw, epd_bitmap_td_rw);  //画坦荡
+  // // PIC_display(gImage_tandan,gImage_tandan);
+  // delay(500);   //3s
+  // EPD_sleep();  //EPD_sleep,Sleep instruction is necessary, please do not delete!!!
   delay(8000);  //3s
 }
 //Tips//
@@ -218,7 +220,7 @@ void PIC_display_Clean(void) {
 
   EPD_W21_WriteCMD(0x13);  //Transfer new data
   for (i = 0; i < 5624; i++) {
-    EPD_W21_WriteDATA(0xff);
+    EPD_W21_WriteDATA(0x00);
   }
   //Refresh
   EPD_W21_WriteCMD(0x12);  //DISPLAY REFRESH
@@ -226,19 +228,56 @@ void PIC_display_Clean(void) {
   lcd_chkstatus();         //waiting for the electronic paper IC to release the idle signal
 }
 
+void PIC_display_Clean_Bar(void) {
+  int row = 296;
+  int col = 19;
+  unsigned int i,j;
+  EPD_W21_WriteCMD(0x10);  //黑白模式下，ff代表写入白色，00代表写入黑色
+  for(i=0;i<row;i++) {
+    for(j=0;j<col;j++) {
+      if(i%2==1) {
+        EPD_W21_WriteDATA(0Xff); 
+      }else{
+        EPD_W21_WriteDATA(0xff); 
+      }
+    }
+  }
+  EPD_W21_WriteCMD(0x13);  //红白模式下，00代表不写，ff代表红色填充
+  for(i=0;i<row;i++) {
+    int k=1;
+    for(j=0;j<col;j++) {
+      
+      if(i%32>=16) {
+        if(k%4>=1)
+        {
+          EPD_W21_WriteDATA(0Xff); 
+        }else{
+          EPD_W21_WriteDATA(0X00); 
+        }
+        k++;
+      }else{
+        EPD_W21_WriteDATA(0x00); 
+      }
+    }
+  }
+  EPD_W21_WriteCMD(0x12);  //DISPLAY REFRESH
+  delay(10);               //!!!The delay here is necessary, 200uS at least!!!
+  lcd_chkstatus();         //waiting for the electronic paper IC to release the idle signal
+
+}
 
 void PIC_display_Clean_white(void) {
   unsigned int i;
   EPD_W21_WriteCMD(0x10);  //黑白模式下，ff代表写入白色，00代表写入黑色
   for (i = 0; i < 5624; i++) {
     if (i < 1875) {
-      EPD_W21_WriteDATA(0X8f);  //第一段白色
+      EPD_W21_WriteDATA(0X55);  //第一段白色
     } else if (i < 3748) {
       // EPD_W21_WriteDATA(0X00);
-      EPD_W21_WriteDATA(0X80);  //第二段黑色
+      EPD_W21_WriteDATA(0X00);  //第二段黑色
 
     } else {
-      EPD_W21_WriteDATA(0X80);  //第二段黑色
+      EPD_W21_WriteDATA(0X00);  //第二段黑色
       // break;
     }
   }
@@ -246,12 +285,12 @@ void PIC_display_Clean_white(void) {
   EPD_W21_WriteCMD(0x13);  //红白模式下，00代表不写，ff代表红色填充
   for (i = 0; i < 5624; i++) {
     if (i < 1875) {
-      EPD_W21_WriteDATA(0x00);  //第一段白色
+      EPD_W21_WriteDATA(0xaa);  //第一段白色
     } else if (i < 3748) {
       EPD_W21_WriteDATA(0X00);  //第二段
       // break;
     } else {
-      EPD_W21_WriteDATA(0x3A);  //第三段红色
+      EPD_W21_WriteDATA(0x55);  //第三段红色
     }
   }
   //Refresh
